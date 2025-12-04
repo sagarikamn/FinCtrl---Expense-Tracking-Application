@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinCtrl - Personal Expense Tracker</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>💰 FinCtrl</h1>
+                <p class="tagline">Track expenses, set budgets, stay in control</p>
+            </div>
+            <div class="user-section">
+                <select id="userSelect" onchange="switchUser()">
+                    <option value="">👤 Select User</option>
+                </select>
+                <button class="btn-primary" onclick="showCreateUser()">+ New User</button>
+            </div>
+        </header>
+
+        <div id="createUserModal" class="modal" style="display:none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Create New User</h2>
+                    <span class="close" onclick="closeCreateUser()">&times;</span>
+                </div>
+                <form id="createUserForm" onsubmit="createUser(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="userName" placeholder="Enter your name" required minlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="userEmail" placeholder="Enter your email" required>
+                    </div>
+                    <button type="submit" class="btn-primary btn-block">Create User</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="alertsContainer"></div>
+
+        <div id="mainContent" style="display:none;">
+            <nav class="tabs">
+                <button class="tab-button active" onclick="showTab('expenses')">
+                    <span class="icon">📊</span> Expenses
+                </button>
+                <button class="tab-button" onclick="showTab('budgets')">
+                    <span class="icon">💵</span> Budgets
+                </button>
+                <button class="tab-button" onclick="showTab('reports')">
+                    <span class="icon">📈</span> Reports
+                </button>
+                <button class="tab-button" onclick="showTab('alerts')">
+                    <span class="icon">🔔</span> Custom Alerts
+                </button>
+            </nav>
+
+            <div id="expensesTab" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>📝 Add Daily Expense</h2>
+                        <p>Keep track of where your money goes</p>
+                    </div>
+                    <form id="expenseForm" onsubmit="addExpense(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Amount (₹) *</label>
+                                <input type="number" step="0.01" min="0.01" max="10000000" id="expenseAmount" placeholder="0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="expenseCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="Food">🍔 Food</option>
+                                    <option value="Transport">🚗 Transport</option>
+                                    <option value="Entertainment">🎬 Entertainment</option>
+                                    <option value="Utilities">💡 Utilities</option>
+                                    <option value="Healthcare">🏥 Healthcare</option>
+                                    <option value="Shopping">🛍️ Shopping</option>
+                                    <option value="Other">📦 Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Date *</label>
+                                <input type="date" id="expenseDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Description (Optional)</label>
+                                <input type="text" id="expenseDescription" placeholder="What did you buy?" maxlength="200">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary btn-block">Add Expense</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Recent Expenses</h2>
+                        <p>Your spending history</p>
+                    </div>
+                    <div id="expensesList" class="expenses-list"></div>
+                </div>
+            </div>
+
+            <div id="budgetsTab" class="tab-content" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>💵 Set Monthly Budget</h2>
+                        <p>Plan your spending limits for each category</p>
+                    </div>
+                    <form id="budgetForm" onsubmit="setBudget(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="budgetCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="Food">🍔 Food</option>
+                                    <option value="Transport">🚗 Transport</option>
+                                    <option value="Entertainment">🎬 Entertainment</option>
+                                    <option value="Utilities">💡 Utilities</option>
+                                    <option value="Healthcare">🏥 Healthcare</option>
+                                    <option value="Shopping">🛍️ Shopping</option>
+                                    <option value="Other">📦 Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Budget Amount (₹) *</label>
+                                <input type="number" step="0.01" min="0.01" max="10000000" id="budgetAmount" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Month & Year *</label>
+                            <input type="month" id="budgetMonth" required>
+                            <small style="color: var(--gray-600); margin-top: 5px; display:block;">
+                                💡 You can set different budgets for different months
+                            </small>
+                        </div>
+                        <button type="submit" class="btn-primary btn-block">Set Budget</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Your Budgets</h2>
+                        <p>Manage your monthly spending limits</p>
+                    </div>
+                    <div id="budgetsList"></div>
+                </div>
+            </div>
+
+            <div id="reportsTab" class="tab-content" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>📈 Monthly Report</h2>
+                        <p>View your spending patterns and budget performance</p>
+                    </div>
+                    <div class="report-controls">
+                        <input type="month" id="reportMonth" required>
+                        <button onclick="generateReport()" class="btn-primary">Generate Report</button>
+                    </div>
+                    <div id="reportContainer"></div>
+                </div>
+            </div>
+
+            <div id="alertsTab" class="tab-content" style="display:none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>🔔 Custom Budget Alerts</h2>
+                        <p>Get notified when you reach a certain percentage of your budget</p>
+                    </div>
+                    <form id="alertForm" onsubmit="setAlert(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Category *</label>
+                                <select id="alertCategory" required>
+                                    <option value="">Select category</option>
+                                    <option value="Food">🍔 Food</option>
+                                    <option value="Transport">🚗 Transport</option>
+                                    <option value="Entertainment">🎬 Entertainment</option>
+                                    <option value="Utilities">💡 Utilities</option>
+                                    <option value="Healthcare">🏥 Healthcare</option>
+                                    <option value="Shopping">🛍️ Shopping</option>
+                                    <option value="Other">📦 Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Alert Threshold (%) *</label>
+                                <input type="number" id="alertThreshold" placeholder="e.g., 90" min="1" max="100" required>
+                                <small style="color: var(--gray-600); margin-top: 5px; display:block;">
+                                    💡 Example: 90 means alert when 90% of budget is used
+                                </small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary btn-block">Set Alert</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Active Alerts</h2>
+                        <p>Your configured budget alerts</p>
+                    </div>
+                    <div id="activeAlertsList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+            setDefaultDates();
+            setMaxDate();
+        });
+
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            const currMonth = new Date().toISOString().slice(0, 7);
+            
+            const expenseDateEl = document.getElementById('expenseDate');
+            if (expenseDateEl) expenseDateEl.value = today;
+
+            const budgetMonthEl = document.getElementById('budgetMonth');
+            if (budgetMonthEl) budgetMonthEl.value = currMonth;
+
+            const reportMonthEl = document.getElementById('reportMonth');
+            if (reportMonthEl) reportMonthEl.value = currMonth;
+        }
+
+        function setMaxDate() {
+            const today = new Date().toISOString().split('T')[0];
+            const expenseDateEl = document.getElementById('expenseDate');
+            if (expenseDateEl) expenseDateEl.max = today;
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/users');
+                const users = await res.json();
+                const select = document.getElementById('userSelect');
+                select.innerHTML = '<option value="">👤 Select User</option>';
+                users.forEach(u => {
+                    const opt = document.createElement('option');
+                    opt.value = u.id;
+                    opt.textContent = u.name;
+                    select.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Error loading users:', err);
+                showNotification('Could not load users. Please refresh.', 'danger');
+            }
+        }
+
+        function showCreateUser() {
+            document.getElementById('createUserModal').style.display = 'block';
+        }
+
+        function closeCreateUser() {
+            document.getElementById('createUserModal').style.display = 'none';
+            const form = document.getElementById('createUserForm');
+            if (form) form.reset();
+        }
+
+        async function createUser(e) {
+            e.preventDefault();
+            const name = document.getElementById('userName').value.trim();
+            const email = document.getElementById('userEmail').value.trim().toLowerCase();
+            
+            if (name.length < 2) {
+                showNotification('Name must be at least 2 characters', 'warning');
+                return;
+            }
+            
+            try {
+                const res = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name, email})
+                });
+                const out = await res.json();
+                if (out.success) {
+                    showNotification('Account created successfully! 🎉', 'success');
+                    closeCreateUser();
+                    await loadUsers();
+                } else {
+                    showNotification(out.error || 'Could not create user', 'danger');
+                }
+            } catch (err) {
+                console.error('Error creating user:', err);
+                showNotification('Something went wrong. Please try again.', 'danger');
+            }
+        }
+
+        function switchUser() {
+            const sel = document.getElementById('userSelect');
+            currentUser = sel ? sel.value : null;
+            if (currentUser) {
+                document.getElementById('mainContent').style.display = 'block';
+                loadExpenses();
+                loadBudgets();
+                loadActiveAlerts();
+            } else {
+                document.getElementById('mainContent').style.display = 'none';
+            }
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(t => {
+                t.classList.remove('active');
+                t.style.display = 'none';
+            });
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+
+            const tabEl = document.getElementById(tabName + 'Tab');
+            if (tabEl) {
+                tabEl.classList.add('active');
+                tabEl.style.display = 'block';
+            }
+            
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach((btn, idx) => {
+                if ((tabName === 'expenses' && idx === 0) ||
+                    (tabName === 'budgets' && idx === 1) ||
+                    (tabName === 'reports' && idx === 2) ||
+                    (tabName === 'alerts' && idx === 3)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        async function addExpense(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                showNotification('Please select a user first', 'warning');
+                return;
+            }
+
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const category = document.getElementById('expenseCategory').value;
+            const date = document.getElementById('expenseDate').value;
+            const description = document.getElementById('expenseDescription').value.trim();
+
+            if (amount <= 0) {
+                showNotification('Amount must be greater than zero', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/expenses', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUser),
+                        amount, category, date, description
+                    })
+                });
+                const out = await res.json();
+                if (out.success) {
+                    showNotification('Expense added successfully! 💰', 'success');
+
+                    if (out.alerts && out.alerts.length) {
+                        out.alerts.forEach(a => showNotification(a.message, a.type));
+                    }
+
+                    document.getElementById('expenseForm').reset();
+                    setDefaultDates();
+                    setMaxDate();
+                    loadExpenses();
+                } else {
+                    showNotification(out.error || 'Could not add expense', 'danger');
+                }
+            } catch (err) {
+                console.error('Error adding expense:', err);
+                showNotification('Something went wrong. Please try again.', 'danger');
+            }
+        }
+
+        async function loadExpenses() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`/api/expenses?user_id=${currentUser}`);
+                const exps = await res.json();
+                const container = document.getElementById('expensesList');
+
+                if (!exps || exps.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <h3>No expenses yet</h3>
+                            <p>Start tracking your daily expenses to see them here</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = exps.map(exp => `
+                    <div class="expense-item">
+                        <div class="expense-info">
+                            <div class="expense-category">${getCategoryIcon(exp.category)} ${exp.category}</div>
+                            <div class="expense-description">${exp.description || 'No description'}</div>
+                            <div class="expense-date">${formatDate(exp.date)}</div>
+                        </div>
+                        <div class="expense-amount">₹${parseFloat(exp.amount).toFixed(2)}</div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Error loading expenses:', err);
+                showNotification('Could not load expenses', 'danger');
+            }
+        }
+
+        async function setBudget(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                showNotification('Please select a user first', 'warning');
+                return;
+            }
+
+            const cat = document.getElementById('budgetCategory').value;
+            const amt = parseFloat(document.getElementById('budgetAmount').value);
+            const monthYear = document.getElementById('budgetMonth').value;
+            
+            if (!monthYear) {
+                showNotification('Please select a month', 'warning');
+                return;
+            }
+            
+            if (amt <= 0) {
+                showNotification('Budget must be greater than zero', 'warning');
+                return;
+            }
+
+            const parts = monthYear.split('-');
+            const year = parseInt(parts[0], 10);
+            const month = parts[1];
+
+            try {
+                const res = await fetch('/api/budgets', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUser),
+                        category: cat,
+                        amount: amt,
+                        month,
+                        year
+                    })
+                });
+                const out = await res.json();
+                if (out.success) {
+                    showNotification('Budget set successfully! 💵', 'success');
+                    document.getElementById('budgetForm').reset();
+                    setDefaultDates();
+                    loadBudgets();
+                } else {
+                    showNotification(out.error || 'Could not set budget', 'warning');
+                }
+            } catch (err) {
+                console.error('Error setting budget:', err);
+                showNotification('Something went wrong. Please try again.', 'danger');
+            }
+        }
+
+        async function loadBudgets() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`/api/budgets?user_id=${currentUser}`);
+                const budgets = await res.json();
+                const list = document.getElementById('budgetsList');
+
+                if (!budgets || budgets.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">💵</div>
+                            <h3>No budgets set</h3>
+                            <p>Set your first budget to start tracking your spending limits</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = `
+                    <table>
+                        <thead><tr><th>Category</th><th>Amount</th><th>Month</th><th>Year</th></tr></thead>
+                        <tbody>
+                            ${budgets.map(b => `
+                                <tr>
+                                    <td>${getCategoryIcon(b.category)} ${b.category}</td>
+                                    <td>₹${parseFloat(b.amount).toFixed(2)}</td>
+                                    <td>${getMonthName(b.month)}</td>
+                                    <td>${b.year}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                console.error('Error loading budgets:', err);
+                showNotification('Could not load budgets', 'danger');
+            }
+        }
+
+        async function setAlert(e) {
+            e.preventDefault();
+            if (!currentUser) {
+                showNotification('Please select a user first', 'warning');
+                return;
+            }
+            
+            const cat = document.getElementById('alertCategory').value;
+            const threshold = parseInt(document.getElementById('alertThreshold').value, 10);
+
+            if (threshold < 1 || threshold > 100) {
+                showNotification('Threshold must be between 1 and 100', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/alerts', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        user_id: parseInt(currentUser),
+                        category: cat,
+                        threshold_percentage: threshold
+                    })
+                });
+                const out = await res.json();
+                if (out.success) {
+                    showNotification(`Alert set! You'll be notified at ${threshold}% budget usage 🔔`, 'success');
+                    document.getElementById('alertForm').reset();
+                    loadActiveAlerts();
+                } else {
+                    showNotification(out.error || 'Could not set alert', 'warning');
+                }
+            } catch (err) {
+                console.error('Error setting alert:', err);
+                showNotification('Something went wrong. Please try again.', 'danger');
+            }
+        }
+
+        async function loadActiveAlerts() {
+            if (!currentUser) return;
+            try {
+                const res = await fetch(`/api/alerts?user_id=${currentUser}`);
+                const alerts = await res.json();
+                const list = document.getElementById('activeAlertsList');
+
+                if (!alerts || alerts.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">🔔</div>
+                            <h3>No alerts configured</h3>
+                            <p>Set up alerts to get notified about your spending patterns</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = `
+                    <table>
+                        <thead><tr><th>Category</th><th>Alert At</th><th>Action</th></tr></thead>
+                        <tbody>
+                            ${alerts.map(a => `
+                                <tr>
+                                    <td>${getCategoryIcon(a.category)} ${a.category}</td>
+                                    <td>${a.threshold_percentage}% of budget used</td>
+                                    <td>
+                                        <button onclick="deleteAlert('${a.category}')" class="btn-danger">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (err) {
+                console.error('Error loading alerts:', err);
+                showNotification('Could not load alerts', 'danger');
+            }
+        }
+
+        async function deleteAlert(category) {
+            if (!confirm('Are you sure you want to delete this alert?')) return;
+            try {
+                const res = await fetch(`/api/alerts?user_id=${currentUser}&category=${encodeURIComponent(category)}`, {
+                    method: 'DELETE'
+                });
+                const out = await res.json();
+                if (out.success) {
+                    showNotification('Alert deleted successfully', 'success');
+                    loadActiveAlerts();
+                } else {
+                    showNotification('Could not delete alert', 'warning');
+                }
+            } catch (err) {
+                console.error('Error deleting alert:', err);
+                showNotification('Something went wrong. Please try again.', 'danger');
+            }
+        }
+
+        async function generateReport() {
+            if (!currentUser) {
+                showNotification('Please select a user first', 'warning');
+                return;
+            }
+            
+            const val = document.getElementById('reportMonth').value;
+            if (!val) {
+                showNotification('Please choose a month first', 'warning');
+                return;
+            }
+            
+            const parts = val.split('-');
+            const year = parts[0], month = parts[1];
+
+            try {
+                const res = await fetch(`/api/reports/monthly?user_id=${currentUser}&month=${month}&year=${year}`);
+                const report = await res.json();
+                const container = document.getElementById('reportContainer');
+
+                if (!report || !report.category_spending || report.category_spending.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📊</div>
+                            <h3>No data for this month</h3>
+                            <p>Add some expenses to generate a report</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="report">
+                        <div class="report-summary">
+                            <h3>Total Spending for ${getMonthName(month)} ${year}</h3>
+                            <div class="amount">₹${parseFloat(report.total_spending).toFixed(2)}</div>
+                        </div>
+
+                        <h3 style="margin-bottom: 15px;">Spending by Category</h3>
+                        <table>
+                            <thead><tr><th>Category</th><th>Amount</th></tr></thead>
+                            <tbody>
+                                ${report.category_spending.map(c => `
+                                    <tr>
+                                        <td>${getCategoryIcon(c.category)} ${c.category}</td>
+                                        <td>₹${parseFloat(c.total).toFixed(2)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+
+                        ${report.budget_comparison && report.budget_comparison.length > 0 ? `
+                            <h3 style="margin: 30px 0 15px 0;">Budget vs Spending Comparison</h3>
+                            <table>
+                                <thead><tr><th>Category</th><th>Budget</th><th>Spent</th><th>Status</th><th>Progress</th></tr></thead>
+                                <tbody>
+                                    ${report.budget_comparison.map(c => {
+                                        const isOver = c.remaining < 0;
+                                        const extraSpent = Math.abs(c.remaining);
+                                        return `
+                                        <tr ${isOver ? 'class="over-budget"' : ''}>
+                                            <td>${getCategoryIcon(c.category)} ${c.category}</td>
+                                            <td>₹${parseFloat(c.budget).toFixed(2)}</td>
+                                            <td>₹${parseFloat(c.spent).toFixed(2)}</td>
+                                            <td style="color: ${isOver ? '#d9534f' : '#5cb85c'}; font-weight: 600;">
+                                                ${isOver 
+                                                    ? `<span style="color: #d9534f;">⚠️ Over by ₹${extraSpent.toFixed(2)}</span>`
+                                                    : `<span style="color: #5cb85c;">✓ ₹${parseFloat(c.remaining).toFixed(2)} left</span>`
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="progress-bar">
+                                                    <div class="progress-fill ${c.percentage > 100 ? 'over' : ''}" 
+                                                         style="width: ${Math.min(c.percentage, 100)}%"></div>
+                                                </div>
+                                                ${parseFloat(c.percentage).toFixed(1)}%
+                                            </td>
+                                        </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        ` : '<p style="color: var(--gray-600); margin-top: 20px;">No budgets set for this period</p>'}
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Error generating report:', err);
+                showNotification('Could not generate report', 'danger');
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('alertsContainer');
+            const el = document.createElement('div');
+            el.className = `alert-message ${type}`;
+            el.textContent = message;
+            container.appendChild(el);
+            setTimeout(() => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            }, 6000);
+        }
+
+        function getCategoryIcon(c) {
+            const icons = {
+                'Food': '🍔', 'Transport': '🚗', 'Entertainment': '🎬',
+                'Utilities': '💡', 'Healthcare': '🏥', 'Shopping': '🛍️', 'Other': '📦'
+            };
+            return icons[c] || '📦';
+        }
+
+        function getMonthName(month) {
+            const m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const idx = parseInt(month, 10) - 1;
+            return m[idx] || month;
+        }
+
+        function formatDate(d) {
+            try {
+                return new Date(d).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return d;
+            }
+        }
+
+        window.onclick = function(evt) {
+            if (evt.target && evt.target.classList && evt.target.classList.contains('modal')) {
+                evt.target.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>
