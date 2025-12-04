@@ -25,13 +25,13 @@ Backend logic is implemented in **app.py**, while the UI resides in **index.html
 
 ```
 
-FinCtrl/
+FinCtrl---Expense-Tracking-Application/
 │── app.py                 # Flask backend & REST APIs
 │── templates/index.html   # Web UI
 │── static/style.css       # Styling
 │── Dockerfile             # Docker build file
 │── requirements.txt       # Python dependencies
-README.md                  # Documentation
+│── README.md                  # Documentation
 
 ````
 
